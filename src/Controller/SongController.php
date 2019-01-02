@@ -28,14 +28,7 @@ class SongController extends AbstractController
      */
     protected $repository;
 
-    protected function getRepository(DocumentManager $dm): Repository
-    {
-        if ($this->repository === null) {
-            $this->repository = $dm->getRepository(Song::class);
-        }
-
-        return $this->repository;
-    }
+    /* Route functions here vvvvv ************************************************************************************/
 
     /**
      * @Route("/", name="song_index")
@@ -49,7 +42,7 @@ class SongController extends AbstractController
         $song_list = $repository->findAll();
 
         return $this->render(
-            'songs/song_index.html.twig', [
+            '/songs/index.html.twig', [
            'song_list' => $song_list,
         ]);
     }
@@ -68,7 +61,7 @@ class SongController extends AbstractController
         $repository = $this->getRepository($dm);
         $song = $repository->find(['id' => $id]);
         return $this->render(
-            'songs/song_show.html.twig', [
+            '/songs/show.html.twig', [
             'song' => $song,
         ]);
     }
@@ -98,7 +91,8 @@ class SongController extends AbstractController
             $song = $form->getData();
             $response = $this->createSong($song, $dm);
         } else {
-            $response = $this->render('songs/song_new.html.twig', array(
+            $response = $this->render(
+                '/songs/new.html.twig', array(
                 'form' => $form->createView(),
             ));
         }
@@ -106,6 +100,9 @@ class SongController extends AbstractController
         return $response;
     }
 
+    /* Route functions here ^^^^^ ************************************************************************************/
+
+    /* Route functions here ^^^^^ ************************************************************************************/
     /**
      * @param Song            $passed_song
      * @param DocumentManager $dm
@@ -123,5 +120,19 @@ class SongController extends AbstractController
         $dm->flush();
 
         return new Response('Created Song: id '.$song->getId());
+    }
+
+    /**
+     * @param DocumentManager $dm
+     *
+     * @return Repository
+     */
+    protected function getRepository(DocumentManager $dm): Repository
+    {
+        if ($this->repository === null) {
+            $this->repository = $dm->getRepository(Song::class);
+        }
+
+        return $this->repository;
     }
 }
