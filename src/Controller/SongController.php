@@ -119,7 +119,7 @@ class SongController extends AbstractController
         $dm->persist($song);
         $dm->flush();
 
-        return new Response('Created Song: id '.$song->getId());
+        return $this->redirectToRoute('song_index');
     }
 
     /**
