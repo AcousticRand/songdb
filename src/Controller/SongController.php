@@ -9,11 +9,10 @@
 namespace App\Controller;
 
 use App\Document\Song;
+use App\Form\Type\SongType;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Repository\DocumentRepository as Repository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -28,7 +27,7 @@ class SongController extends AbstractController
      */
     protected $repository;
 
-    /* Route functions here vvvvv ************************************************************************************/
+/* Route functions here vvvvv ************************************************************************************/
 
     /**
      * @Route("/", name="song_index")
@@ -50,20 +49,22 @@ class SongController extends AbstractController
     /**
      * @Route("/edit/{id}", name="song_edit")
      * @param string          $id
+     * @param Request         $request
      * @param DocumentManager $dm
      *
      * @return Response
      * @throws \Doctrine\ODM\MongoDB\LockException
      * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
-    public function edit($id, DocumentManager $dm): Response
+    public function edit($id, Request $request, DocumentManager $dm): Response
     {
         $repository = $this->getRepository($dm);
+
+        /**
+         * @var Song $song
+         */
         $song = $repository->find(['id' => $id]);
-        return $this->render(
-            '/songs/show.html.twig', [
-            'song' => $song,
-        ]);
+        return $this->update($song, $request, $dm);
     }
 
     /**
@@ -72,54 +73,69 @@ class SongController extends AbstractController
      * @param DocumentManager $dm
      *
      * @return Response
-     * @throws \Doctrine\ODM\MongoDB\MongoDBException
      */
     public function new(Request $request, DocumentManager $dm): Response
     {
-        // creates a song and gives it some dummy data for this example
-        $song = new Song();
-
-        $form = $this->createFormBuilder($song)
-            ->add('artist', TextType::class)
-            ->add('title', TextType::class)
-            ->add('save', SubmitType::class, array('label' => 'Create Song'))
-            ->getForm();
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $song = $form->getData();
-            $response = $this->createSong($song, $dm);
-        } else {
-            $response = $this->render(
-                '/songs/new.html.twig', array(
-                'form' => $form->createView(),
-            ));
-        }
-
-        return $response;
+        return $this->update(new Song(), $request, $dm);
     }
 
-    /* Route functions here ^^^^^ ************************************************************************************/
-
-    /* Route functions here ^^^^^ ************************************************************************************/
     /**
-     * @param Song            $passed_song
+     * @Route("/create", name="song_create")
+     * @param Request         $request
      * @param DocumentManager $dm
      *
      * @return Response
      * @throws \Doctrine\ODM\MongoDB\MongoDBException
      */
-    public function createSong(Song $passed_song, DocumentManager $dm): Response
+    public function create(Request $request, DocumentManager $dm): Response
     {
+        $form = $this->createForm(SongType::class, new Song());
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $song = $form->getData();
+
+            $dm->persist($song);
+            $dm->flush();
+
+            return $this->redirect('/songs/');
+        }
+        /*
         $song = new Song();
         $song->setArtist($passed_song->getArtist());
         $song->setTitle($passed_song->getTitle());
+        $song->setKey($passed_song->getKey());
+        $song->setCamelot($passed_song->getCamelot());
+        $song->setDuration($passed_song->getDuration());
+        $song->setBpm($passed_song->getBpm());
 
         $dm->persist($song);
         $dm->flush();
 
         return $this->redirectToRoute('song_index');
+        */
+    }
+    /* Utility functions here vvvvv **********************************************************************************/
+
+    /* Route functions here ^^^^^ ************************************************************************************/
+
+    /**
+     * @param Song            $song
+     * @param Request         $request
+     * @param DocumentManager $dm
+     *
+     * @return Response
+     */
+    private function update(Song $song, Request $request, DocumentManager $dm): Response
+    {
+        $form = $this->createForm(SongType::class, $song);
+
+        return $this->render(
+            '/songs/new.html.twig',
+            [
+                'form' => $form->createView()
+            ]
+        );
     }
 
     /**
@@ -135,4 +151,6 @@ class SongController extends AbstractController
 
         return $this->repository;
     }
+
+/* Utility functions here ^^^^^ **********************************************************************************/
 }

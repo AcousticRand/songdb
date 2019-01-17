@@ -1,8 +1,32 @@
 {% extends "base.html.twig" %}
 {% block body %}
+    <div class="col-md-12 col-sm-12 col-xs-12 main-attribute-table-container">
+        <div><div class="attributeTable hidden-xs">
+                <table class="col-md-12 col-sm-12 col-xs-12 attribute-table">
+                    <tbody>
+                    <tr>
+                        <th class="attribute-table-header" title="Song Title"><i>Title</i></th>
+                        <th class="attribute-table-header" title=""><i>Artist</i></th>
+                        <th class="attribute-table-header" title=""><i>Key</i></th>
+                        <th class="attribute-table-header" title=""><i>Camelot</i></th>
+                        <th class="attribute-table-header" title=""><i>Duration</i></th>
+                        <th class="attribute-table-header" title=""><i>BPM</i></th>
+                    </tr>
+                    {% for song in song_list %}
+                        <tr>
+                            <td class="attribute-table-element" title=""><a href="{{ path('song_edit', {'id':song.id|trans}) }}">{{ song.title }}</a></td>
+                            <td class="attribute-table-element" title=""><a href="{{ path('song_edit', {'id':song.id|trans}) }}">{{ song.artist }}</a></td>
+                            <td class="attribute-table-element" title="">{{ song.key }}</td>
+                            <td class="attribute-table-element" title="">{{ song.camelot }}</td>
+                            <td class="attribute-table-element" title="">{{ song.duration }}</td>
+                            <td class="attribute-table-element" title="">{{ song.bpm }}</td>
+                        </tr>
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
     <ul id="song_list">
-        {% for song in song_list %}
-            <li><a href="{{ path('song_edit', {'id':song.id|trans}) }}">{{ song.title }}</a> by <a href="{{ path('song_edit', {'id':song.id|trans}) }}">{{ song.artist }}</a></li>
-        {% endfor %}
     </ul>
 {% endblock %}

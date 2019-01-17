@@ -1,6 +1,7 @@
 {% extends "base.html.twig" %}
 {% block body %}
-        {{ form_start(form) }}
-        {{ form_widget(form) }}
+        {{ form_start(form, {'action': path('song_create'), 'method': 'POST'}) }}
+                {{ form_widget(form) }}
+                <input type="submit" value="Create Song" />
         {{ form_end(form) }}
 {% endblock %}
