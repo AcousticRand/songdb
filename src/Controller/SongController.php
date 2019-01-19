@@ -49,14 +49,13 @@ class SongController extends AbstractController
     /**
      * @Route("/edit/{id}", name="song_edit")
      * @param string          $id
-     * @param Request         $request
      * @param DocumentManager $dm
      *
      * @return Response
      * @throws \Doctrine\ODM\MongoDB\LockException
      * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
-    public function edit($id, Request $request, DocumentManager $dm): Response
+    public function edit($id, DocumentManager $dm): Response
     {
         $repository = $this->getRepository($dm);
 
@@ -64,19 +63,17 @@ class SongController extends AbstractController
          * @var Song $song
          */
         $song = $repository->find(['id' => $id]);
-        return $this->update($song, $request, $dm);
+        return $this->setupForm($song, 'Update Song');
     }
 
     /**
      * @Route("/new", name="song_new")
-     * @param Request         $request
-     * @param DocumentManager $dm
      *
      * @return Response
      */
-    public function new(Request $request, DocumentManager $dm): Response
+    public function new(): Response
     {
-        return $this->update(new Song(), $request, $dm);
+        return $this->setupForm(new Song(), 'Create Song');
     }
 
     /**
@@ -86,10 +83,18 @@ class SongController extends AbstractController
      *
      * @return Response
      * @throws \Doctrine\ODM\MongoDB\MongoDBException
+     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
     public function create(Request $request, DocumentManager $dm): Response
     {
-        $form = $this->createForm(SongType::class, new Song());
+        $repository = $this->getRepository($dm);
+        $formSong = $request->request->get('song');
+        /**
+         * @var Song $song
+         */
+        $song = $repository->find(['id' => $formSong['id']]);
+
+        $form = $this->createForm(SongType::class, $song);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -100,40 +105,49 @@ class SongController extends AbstractController
 
             return $this->redirect('/songs/');
         }
-        /*
-        $song = new Song();
-        $song->setArtist($passed_song->getArtist());
-        $song->setTitle($passed_song->getTitle());
-        $song->setKey($passed_song->getKey());
-        $song->setCamelot($passed_song->getCamelot());
-        $song->setDuration($passed_song->getDuration());
-        $song->setBpm($passed_song->getBpm());
+    }
 
-        $dm->persist($song);
+    /**
+     * @Route("/delete/{id}", name="song_delete")
+     * @param string          $id
+     * @param DocumentManager $dm
+     *
+     * @return Response
+     * @throws \Doctrine\ODM\MongoDB\MongoDBException
+     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     */
+    public function delete(string $id, DocumentManager $dm): Response
+    {
+        $repository = $this->getRepository($dm);
+        /**
+         * @var Song $song
+         */
+        $song = $repository->find(['id' => $id]);
+
+        $dm->remove($song);
         $dm->flush();
 
-        return $this->redirectToRoute('song_index');
-        */
+        return $this->redirect('/songs/');
     }
     /* Utility functions here vvvvv **********************************************************************************/
 
     /* Route functions here ^^^^^ ************************************************************************************/
 
     /**
-     * @param Song            $song
-     * @param Request         $request
-     * @param DocumentManager $dm
+     * @param Song   $song
+     * @param string $label
      *
      * @return Response
      */
-    private function update(Song $song, Request $request, DocumentManager $dm): Response
+    private function setupForm(Song $song, string $label): Response
     {
         $form = $this->createForm(SongType::class, $song);
 
         return $this->render(
             '/songs/new.html.twig',
             [
-                'form' => $form->createView()
+                'form' => $form->createView(),
+                'label' => $label
             ]
         );
     }

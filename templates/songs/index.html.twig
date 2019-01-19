@@ -11,6 +11,7 @@
                         <th class="attribute-table-header" title=""><i>Camelot</i></th>
                         <th class="attribute-table-header" title=""><i>Duration</i></th>
                         <th class="attribute-table-header" title=""><i>BPM</i></th>
+                        <th class="attribute-table-header" title="">Action</th>
                     </tr>
                     {% for song in song_list %}
                         <tr>
@@ -20,6 +21,13 @@
                             <td class="attribute-table-element" title="">{{ song.camelot }}</td>
                             <td class="attribute-table-element" title="">{{ song.duration }}</td>
                             <td class="attribute-table-element" title="">{{ song.bpm }}</td>
+                            <td class="attribute-table-element" title="">
+                                <a href="{{ path('song_delete', {'id':song.id|trans}) }}" onclick="return confirm('Are you sure?');">
+                                    <button type="button" class="btn btn-danger" aria-label="Delete">
+                                        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                                    </button>
+                                </a>
+                            </td>
                         </tr>
                     {% endfor %}
 
