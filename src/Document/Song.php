@@ -12,7 +12,8 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @MongoDB\Document(collection="songs")
+ * @MongoDB\Document(collection="songs", repositoryClass="App\Repository\SongRepository")
+ * @MongoDB\Index(keys={"artist"="text", "title"="text"})
  */
 class Song
 {

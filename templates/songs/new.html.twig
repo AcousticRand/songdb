@@ -2,6 +2,6 @@
 {% block body %}
         {{ form_start(form, {'action': path('song_create'), 'method': 'POST'}) }}
                 {{ form_widget(form) }}
-                <input type="submit" value="{{  label }}" />
+                <input type="submit" value="{{ label }}" />
         {{ form_end(form) }}
 {% endblock %}

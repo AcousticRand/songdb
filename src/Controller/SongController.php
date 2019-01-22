@@ -32,18 +32,39 @@ class SongController extends AbstractController
     /**
      * @Route("/", name="song_index")
      * @param DocumentManager $dm
+     * @param string          $sortBy
      *
      * @return Response
      */
-    public function list(DocumentManager $dm): Response
+    public function list(DocumentManager $dm, string $sortBy = 'artist'): Response
     {
         $repository = $this->getRepository($dm);
         $song_list = $repository->findAll();
 
+        usort($song_list, [$this, $sortBy . 'Sort']);
         return $this->render(
             '/songs/index.html.twig', [
            'song_list' => $song_list,
         ]);
+    }
+
+    /**
+     * @Route("/search", name="song_search")
+     * @param Request         $request
+     * @param DocumentManager $dm
+     *
+     * @return Response
+     * @throws \Doctrine\ODM\MongoDB\LockException
+     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     */
+    public function search(Request $request, DocumentManager $dm): Response
+    {
+        $query = $request->request->get('query');
+        $repository = $this->getRepository($dm);
+
+        $results = $repository->search($query);
+        //$str = json_encode($results->toArray());
+        return $this->json($results->toArray());
     }
 
     /**
@@ -89,10 +110,11 @@ class SongController extends AbstractController
     {
         $repository = $this->getRepository($dm);
         $formSong = $request->request->get('song');
+
         /**
          * @var Song $song
          */
-        $song = $repository->find(['id' => $formSong['id']]);
+        $song = array_key_exists('id', $formSong) ? $repository->find(['id' => $formSong['id']]) : new Song();
 
         $form = $this->createForm(SongType::class, $song);
         $form->handleRequest($request);
@@ -164,6 +186,32 @@ class SongController extends AbstractController
         }
 
         return $this->repository;
+    }
+
+    /**
+     * @param Song $a
+     * @param Song $b
+     *
+     * @return int
+     */
+    public static function artistSort(Song $a, Song $b): int
+    {
+        // First check the artist name
+        if ($a->getArtist() < $b->getArtist()) {
+            return -1;
+        }
+        if ($a->getArtist() > $b->getArtist()) {
+            return 1;
+        }
+        // If they match, check title
+        if ($a->getTitle() < $b->getTitle()) {
+            return -1;
+        }
+        if ($a->getTitle() > $b->getTitle()) {
+            return 1;
+        }
+        // If they match here, they are effectively equal.
+        return 0;
     }
 
 /* Utility functions here ^^^^^ **********************************************************************************/
