@@ -10,6 +10,7 @@ namespace App\Controller;
 
 use App\Document\Song;
 use App\Form\Type\SongType;
+use App\Repository\SongRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Repository\DocumentRepository as Repository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -60,11 +61,14 @@ class SongController extends AbstractController
     public function search(Request $request, DocumentManager $dm): Response
     {
         $query = $request->request->get('query');
+        /**
+         * @var SongRepository $repository
+         */
         $repository = $this->getRepository($dm);
 
         $results = $repository->search($query);
         //$str = json_encode($results->toArray());
-        return $this->json($results->toArray());
+        return $this->json(count($results->toArray()));
     }
 
     /**
