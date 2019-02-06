@@ -12,7 +12,10 @@ use App\Document\Song;
 use App\Form\Type\SongType;
 use App\Repository\SongRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Doctrine\ODM\MongoDB\Repository\DocumentRepository as Repository;
+use Doctrine\ODM\MongoDB\LockException;
+use Doctrine\ODM\MongoDB\Mapping\MappingException;
+use Doctrine\ODM\MongoDB\MongoDBException;
+use MongoDB\BSON\Regex;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,70 +27,80 @@ use Symfony\Component\Routing\Annotation\Route;
 class SongController extends AbstractController
 {
     /**
-     * @var Repository $repository
+     * @var DocumentManager $documentManager
+     */
+    protected $documentManager;
+
+    /**
+     * @var SongRepository $repository
      */
     protected $repository;
 
-/* Route functions here vvvvv ************************************************************************************/
+    public function __construct(DocumentManager $dm)
+    {
+        $this->documentManager = $dm;
+        $this->repository      = $this->documentManager->getRepository(Song::class);
+    }
+
+    /* Route functions here vvvvv ************************************************************************************/
 
     /**
      * @Route("/", name="song_index")
-     * @param DocumentManager $dm
-     * @param string          $sortBy
      *
      * @return Response
      */
-    public function list(DocumentManager $dm, string $sortBy = 'artist'): Response
+    public function list(): Response
     {
-        $repository = $this->getRepository($dm);
-        $song_list = $repository->findAll();
+        return $this->renderList(
+            [],
+            ['artist' => 'ASC', 'title' => 'ASC']
+        );
+    }
 
-        usort($song_list, [$this, $sortBy . 'Sort']);
-        return $this->render(
-            '/songs/index.html.twig', [
-           'song_list' => $song_list,
-        ]);
+    /**
+     * @Route("/search/artist/{query}", name="song_search_artist")
+     * @param string          $query
+     *
+     * @return Response
+     */
+    public function searchArtist(string $query): Response
+    {
+        return $this->renderList(
+            ['artist' => $query],
+            ['title' => 'ASC']
+        );
     }
 
     /**
      * @Route("/search", name="song_search")
      * @param Request         $request
-     * @param DocumentManager $dm
      *
      * @return Response
-     * @throws \Doctrine\ODM\MongoDB\LockException
-     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
-    public function search(Request $request, DocumentManager $dm): Response
+    public function search(Request $request): Response
     {
         $query = $request->request->get('query');
-        /**
-         * @var SongRepository $repository
-         */
-        $repository = $this->getRepository($dm);
 
-        $results = $repository->search($query);
-        //$str = json_encode($results->toArray());
-        return $this->json(count($results->toArray()));
+        $filter  = ['title' => new Regex($query, 'i')];
+        $orderBy = ['artist' => 'ASC', 'title' => 'ASC'];
+
+        return $this->renderList($filter, $orderBy);
     }
 
     /**
      * @Route("/edit/{id}", name="song_edit")
      * @param string          $id
-     * @param DocumentManager $dm
      *
      * @return Response
-     * @throws \Doctrine\ODM\MongoDB\LockException
-     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     * @throws LockException
+     * @throws MappingException
      */
-    public function edit($id, DocumentManager $dm): Response
+    public function edit(string $id): Response
     {
-        $repository = $this->getRepository($dm);
-
         /**
          * @var Song $song
          */
-        $song = $repository->find(['id' => $id]);
+        $song = $this->repository->find(['id' => $id]);
         return $this->setupForm($song, 'Update Song');
     }
 
@@ -104,21 +117,23 @@ class SongController extends AbstractController
     /**
      * @Route("/create", name="song_create")
      * @param Request         $request
-     * @param DocumentManager $dm
      *
      * @return Response
-     * @throws \Doctrine\ODM\MongoDB\MongoDBException
-     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     * @throws MongoDBException
+     * @throws MappingException
      */
-    public function create(Request $request, DocumentManager $dm): Response
+    public function create(Request $request): Response
     {
-        $repository = $this->getRepository($dm);
-        $formSong = $request->request->get('song');
-
+        $formSong = $request->request->get('song');                     // get any pre-existing values
+        $label = 'Create Song';
         /**
          * @var Song $song
          */
-        $song = array_key_exists('id', $formSong) ? $repository->find(['id' => $formSong['id']]) : new Song();
+        $song = new Song();
+        if (array_key_exists('id', $formSong)) {                        // if we had an id, we are in edit mode
+            $song = $this->repository->find(['id' => $formSong['id']]);
+            $label = 'Update Song';
+        }
 
         $form = $this->createForm(SongType::class, $song);
         $form->handleRequest($request);
@@ -126,38 +141,60 @@ class SongController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $song = $form->getData();
 
-            $dm->persist($song);
-            $dm->flush();
+            $this->documentManager->persist($song);
+            $this->documentManager->flush();
 
             return $this->redirect('/songs/');
         }
+
+        return $this->render(
+            '/songs/new.html.twig',
+            [
+                'form' => $form->createView(),
+                'label' => $label
+            ]
+        );
     }
 
     /**
      * @Route("/delete/{id}", name="song_delete")
-     * @param string          $id
-     * @param DocumentManager $dm
+     * @param string $id
      *
      * @return Response
-     * @throws \Doctrine\ODM\MongoDB\MongoDBException
-     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     * @throws MongoDBException
+     * @throws MappingException
      */
-    public function delete(string $id, DocumentManager $dm): Response
+    public function delete(string $id): Response
     {
-        $repository = $this->getRepository($dm);
         /**
          * @var Song $song
          */
-        $song = $repository->find(['id' => $id]);
+        $song = $this->repository->find(['id' => $id]);
 
-        $dm->remove($song);
-        $dm->flush();
+        $this->documentManager->remove($song);
+        $this->documentManager->flush();
 
         return $this->redirect('/songs/');
     }
+    /* Route functions here ^^^^^ ************************************************************************************/
+
     /* Utility functions here vvvvv **********************************************************************************/
 
-    /* Route functions here ^^^^^ ************************************************************************************/
+    /**
+     * render the list provided
+     *
+     * @param array $filter
+     * @param array $orderBy
+     *
+     * @return Response
+     */
+    private function renderList(array $filter = [], array $orderBy = []): Response
+    {
+        return $this->render(
+            '/songs/index.html.twig', [
+            'song_list' => $this->getSearchResults($filter, $orderBy),
+        ]);
+    }
 
     /**
      * @param Song   $song
@@ -179,43 +216,17 @@ class SongController extends AbstractController
     }
 
     /**
-     * @param DocumentManager $dm
+     * @param array $filter
+     * @param array $orderBy
      *
-     * @return Repository
+     * @return array
      */
-    protected function getRepository(DocumentManager $dm): Repository
+    protected function getSearchResults(array $filter = [], array $orderBy = []): array
     {
-        if ($this->repository === null) {
-            $this->repository = $dm->getRepository(Song::class);
-        }
-
-        return $this->repository;
-    }
-
-    /**
-     * @param Song $a
-     * @param Song $b
-     *
-     * @return int
-     */
-    public static function artistSort(Song $a, Song $b): int
-    {
-        // First check the artist name
-        if ($a->getArtist() < $b->getArtist()) {
-            return -1;
-        }
-        if ($a->getArtist() > $b->getArtist()) {
-            return 1;
-        }
-        // If they match, check title
-        if ($a->getTitle() < $b->getTitle()) {
-            return -1;
-        }
-        if ($a->getTitle() > $b->getTitle()) {
-            return 1;
-        }
-        // If they match here, they are effectively equal.
-        return 0;
+        return $this->repository->findBy(
+            $filter,
+            $orderBy
+        );
     }
 
 /* Utility functions here ^^^^^ **********************************************************************************/

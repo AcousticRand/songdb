@@ -1,40 +1,48 @@
 {% extends "base.html.twig" %}
 {% block body %}
-    <div class="col-md-12 col-sm-12 col-xs-12 main-attribute-table-container">
-        <div><div class="attributeTable hidden-xs">
-                <table class="col-md-12 col-sm-12 col-xs-12 attribute-table">
-                    <tbody>
-                    <tr>
-                        <th class="attribute-table-header" title="Song Title"><i>Title</i></th>
-                        <th class="attribute-table-header" title=""><i>Artist</i></th>
-                        <th class="attribute-table-header" title=""><i>Key</i></th>
-                        <th class="attribute-table-header" title=""><i>Camelot</i></th>
-                        <th class="attribute-table-header" title=""><i>Duration</i></th>
-                        <th class="attribute-table-header" title=""><i>BPM</i></th>
-                        <th class="attribute-table-header" title="">Action</th>
-                    </tr>
-                    {% for song in song_list %}
-                        <tr>
-                            <td class="attribute-table-element" title=""><a href="{{ path('song_edit', {'id':song.id|trans}) }}">{{ song.title }}</a></td>
-                            <td class="attribute-table-element" title=""><a href="{{ path('song_edit', {'id':song.id|trans}) }}">{{ song.artist }}</a></td>
-                            <td class="attribute-table-element" title="">{{ song.key }}</td>
-                            <td class="attribute-table-element" title="">{{ song.camelot }}</td>
-                            <td class="attribute-table-element" title="">{{ song.duration }}</td>
-                            <td class="attribute-table-element" title="">{{ song.bpm }}</td>
-                            <td class="attribute-table-element" title="">
-                                <a href="{{ path('song_delete', {'id':song.id|trans}) }}" onclick="return confirm('Are you sure?');">
-                                    <button type="button" class="btn btn-danger" aria-label="Delete">
-                                        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-                                    </button>
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
+    <div class="container">
+        <table class="table table-sm table-hover table-striped">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Artist</th>
+                    <th scope="col">Key</th>
+                    <th scope="col" class="text-right">Camelot</th>
+                    <th scope="col" class="text-right">Duration</th>
+                    <th scope="col" class="text-right">BPM</th>
+                    <th scope="col" class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for song in song_list %}
+                <tr onclick="">
+                    <td>{{ song.title }}</a></td>
+                    <td><a href="{{ path('song_search_artist', {'query':song.artist}) }}">{{ song.artist }}</a></td>
+                    <td>{{ song.key }}</td>
+                    <td class="text-right">{{ song.camelot }}</td>
+                    <td class="text-right">{{ song.duration }}</td>
+                    <td class="text-right">{{ song.bpm }}</td>
+                    <td class="text-center">
+                        <a href="{{ path('song_delete', {'id':song.id|trans}) }}" onclick="return confirm('Are you sure?');">
+                            <button type="button" class="btn btn-danger" aria-label="Delete">
+                                <span class="far fa-trash-alt" aria-hidden="true"></span>
+                            </button>
+                        </a>
+                        <a href="{{ path('song_edit', {'id':song.id|trans}) }}">
+                            <button type="button" class="btn btn-warning" aria-label="Edit">
+                                <span class="far fa-edit" aria-hidden="true"></span>
+                            </button>
+                        </a>
+                        <a href="{{ path('song_edit', {'id':song.id|trans}) }}">
+                            <button type="button" class="btn btn-success" aria-label="View">
+                                <span class="far fa-eye" aria-hidden="true"></span>
+                            </button>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
 
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    <ul id="song_list">
-    </ul>
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

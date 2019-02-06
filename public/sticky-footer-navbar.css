@@ -25,13 +25,16 @@ body {
 
 body > .container {
     padding: 100px 15px 0;
+    font-size: 16px;
 }
 
 .footer > .container {
     padding-right: 15px;
     padding-left: 15px;
 }
-
+.btn {
+    font-size: larger;
+}
 tr {
     border-bottom: 1pt solid black;
 }

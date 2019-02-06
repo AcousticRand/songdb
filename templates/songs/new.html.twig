@@ -1,7 +1,10 @@
 {% extends "base.html.twig" %}
+{% form_theme form 'bootstrap_4_layout.html.twig' %}
 {% block body %}
-        {{ form_start(form, {'action': path('song_create'), 'method': 'POST'}) }}
+        <div class="container">
+                {{ form_start(form, {'action': path('song_create'), 'method': 'POST'}) }}
                 {{ form_widget(form) }}
-                <input type="submit" value="{{ label }}" />
-        {{ form_end(form) }}
+                <button type="submit" class="btn btn-primary btn-lg btn-block">{{ label }}</button>
+                {{ form_end(form) }}
+        </div>
 {% endblock %}
