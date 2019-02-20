@@ -230,6 +230,9 @@
     "symfony/security-csrf": {
         "version": "v4.2.1"
     },
+    "symfony/stopwatch": {
+        "version": "v4.2.3"
+    },
     "symfony/twig-bridge": {
         "version": "v4.2.1"
     },
