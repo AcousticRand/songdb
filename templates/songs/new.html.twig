@@ -1,9 +1,32 @@
 {% extends "base.html.twig" %}
-{% form_theme form 'bootstrap_4_layout.html.twig' %}
+{#% form_theme form 'bootstrap_4_layout.html.twig' %#}
 {% block body %}
         <div class="container">
-                {{ form_start(form, {'action': path('song_create'), 'method': 'POST'}) }}
-                {{ form_widget(form) }}
+                {{ form_start(form, {'action': path('song_create'), 'method': 'POST', 'attr': {'class': 'go-bottom'}}) }}
+                <div>
+                        {{ form_widget(form.artist) }}
+                        {{ form_label(form.artist) }}
+                </div>
+                <div>
+                        {{ form_widget(form.title) }}
+                        {{ form_label(form.title) }}
+                </div>
+                <div>
+                        {{ form_widget(form.key) }}
+                        {{ form_label(form.key) }}
+                </div>
+                <div>
+                        {{ form_widget(form.camelot) }}
+                        {{ form_label(form.camelot) }}
+                </div>
+                <div>
+                        {{ form_widget(form.duration) }}
+                        {{ form_label(form.duration) }}
+                </div>
+                <div>
+                        {{ form_widget(form.bpm) }}
+                        {{ form_label(form.bpm) }}
+                </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-block">{{ label }}</button>
                 {{ form_end(form) }}
         </div>
