@@ -17,12 +17,12 @@
             {% for song in song_list %}
                 <tr onclick="">
                     <td>{{ song.title }}</a></td>
-                    <td><a href="{{ path('song_search_artist', {'query':song.artist}) }}">{{ song.artist }}</a></td>
+                    <td><a href="{{ path('song_search_artist', {'query':song.artist|url_encode}) }}">{{ song.artist }}</a></td>
                     <td>{{ song.key }}</td>
                     <td class="text-right">{{ song.camelot }}</td>
                     <td class="text-right">{{ song.duration }}</td>
                     <td class="text-right">{{ song.bpm }}</td>
-                    <td class="text-center">
+                    <td class="text-center button-bin">
                         <a href="{{ path('song_delete', {'id':song.id|trans}) }}" onclick="return confirm('Are you sure?');">
                             <button type="button" class="btn btn-danger" aria-label="Delete">
                                 <span class="far fa-trash-alt" aria-hidden="true"></span>
@@ -41,8 +41,8 @@
                     </td>
                 </tr>
             {% endfor %}
-
             </tbody>
         </table>
+        {{  song_list|length }}
     </div>
 {% endblock %}

@@ -144,7 +144,9 @@ class SongController extends AbstractController
             $this->documentManager->persist($song);
             $this->documentManager->flush();
 
-            return $this->redirect('/songs/');
+            $redirect = ($label === 'Create Song') ? '/songs/new' : '/songs';
+
+            return $this->redirect($redirect);
         }
 
         return $this->render(

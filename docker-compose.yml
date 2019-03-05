@@ -6,19 +6,23 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.0.75.0/16
+#        - subnet: 10.0.75.0/16
+        - subnet: 172.16.0.0/16
 services:
-  php:
-    image: webdevops/php-apache-dev:7.2
-    links:
-      - mongo
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./:/app
-    environment:
-      WEB_DOCUMENT_ROOT: /app/public
+#  php:
+#    image: webdevops/php-apache-dev:7.2
+#    links:
+#      - mongo
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#      - "9000:9000"
+#    volumes:
+#      - ./:/app
+#    environment:
+#      XDEBUG_REMOTE_HOST: "10.0.75.1"
+#      XDEBUG_REMOTE_PORT: 9000
+#      WEB_DOCUMENT_ROOT: /app/public
   mongo:
     image: mongo
     restart: always
